@@ -135,6 +135,10 @@ async function main(){
             for(let i = 0; i < listChapter.length; i++){
                 await Downloader(listChapter[i]);
             }
+            
+            // chỉ nên dùng cái bên dưới khi truyện có ít hơn 5 chương
+            // const downloadPromises = listChapter.map(chapter => Downloader(chapter));
+            // await Promise.all(downloadPromises);
     
             rl.close();
         });
