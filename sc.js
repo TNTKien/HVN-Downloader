@@ -47,25 +47,17 @@ async function Downloader(readUrl){
     console.log('Đang load ảnh truyện...');
 
     await page.evaluate(async () => {
-        // await new Promise((resolve, reject) => {
-        //     let totalHeight = 0;
-        //     let distance = 100;
-        //     let timer = setInterval(() => {
-        //         let scrollHeight = document.body.scrollHeight;
-        //         window.scrollBy(0, distance);
-        //         totalHeight += distance;
-        //         if(totalHeight >= scrollHeight){
-        //             clearInterval(timer);
-        //             resolve();
-        //         }
-        //     }, 100);
-        // });
+        await new Promise((resolve, reject) => {
+            window.scrollTo(0,document.body.scrollHeight);
+            resolve();
+        });
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         // let iframe = document.children[0].lastElementChild;
         // iframe.remove();
 
         const backToTop = document.getElementsByClassName('cd-top cd-is-visible');
-        // backToTop[0].click();
+        backToTop[0].click();
         backToTop[0].remove();
     });
 
@@ -88,7 +80,7 @@ async function Downloader(readUrl){
     }
     console.log(`\nĐã tải xong ${title} - ${chap}.`);
 
-    browser.close();
+    //browser.close();
 }
 
 function createFolder(name, path){
