@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
+const path = require('path');
 const readline = require('readline');
 
 async function Downloader(readUrl){
@@ -7,14 +8,29 @@ async function Downloader(readUrl){
     const browser = await puppeteer.launch({
 		headless: "new",
 		defaultViewport: null,
-		args: ['--no-sandbox']
+		args: ['--no-sandbox'],
 	});
 	const page = await browser.newPage();
 	await page.setExtraHTTPHeaders({
-		"Accept-Language": "en"
+		"Accept-Language": "en",
+        referer: 'https://hentaivn.tv/'
 	});
 	await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36');
 	page.setDefaultNavigationTimeout(0);
+
+    await page.setCookie(
+        {
+            name: 'view1',
+            value: '1',
+            domain: 'hentaivn.tv'
+        },
+        {
+            name: 'user_id',
+            value: '4',
+            domain: 'hentaivn.tv'
+        }
+    );
+
     await page.goto(readUrl, { waitUntil: "networkidle0" });
     
     let title = await page.$eval('#unzoom > li:nth-child(3) > a > span', el => el.innerText);
@@ -31,46 +47,32 @@ async function Downloader(readUrl){
 
     console.log('Đang load ảnh truyện...');
 
-    await page.evaluate(async () => {
-        await new Promise((resolve, reject) => {
-            let totalHeight = 0;
-            let distance = 100;
-            let timer = setInterval(() => {
-                let scrollHeight = document.body.scrollHeight;
-                window.scrollBy(0, distance);
-                totalHeight += distance;
-                if(totalHeight >= scrollHeight){
-                    clearInterval(timer);
-                    resolve();
-                }
-            }, 100);
-        });
-
-        let iframe = document.children[0].lastElementChild;
-        iframe.remove();
-
-        const backToTop = document.getElementsByClassName('cd-top cd-is-visible');
-        backToTop[0].click();
-        backToTop[0].remove();
+    let imgsArr = await page.evaluate(async () => {
+        let imgsUrl = [];
+        let imgElements = document.querySelectorAll('#image img');
+        for(let i = 0; i < imgElements.length; i++){
+            let src = imgElements[i].getAttribute('src');
+            imgsUrl.push(src);
+        }
+        return imgsUrl;
     });
 
-    const imgElements = await page.$$('#image img');
-
-    console.log(`Tổng cộng: ${imgElements.length} ảnh.`);
+    console.log(`Tổng cộng: ${imgsArr.length} ảnh.`);
     console.log('Đang tải...');
 
-    for(let i = 0; i < imgElements.length; i++){
-        await imgElements[i].screenshot({
-            path: `./${title}/${chap}/p${i+1}.jpg`,
-            omitBackground: true,
-            type: 'jpeg',
-            quality: 100,
-            // captureBeyondViewport: true
-        });
-        process.stdout.clearLine(); 
-        process.stdout.cursorTo(0); 
-        process.stdout.write(`Đã tải ${i+1}/${imgElements.length}`);  
+    for(let i = 0; i < imgsArr.length; i++){
+        var viewSource = await page.goto(imgsArr[i]);
+        const imgName = path.basename(imgsArr[i]).split('?')[0];
+        fs.writeFile(`./${title}/${chap}/${imgName}`, await viewSource.buffer(), function(err) {
+            if(err) return console.log(err);
+            process.stdout.clearLine(); 
+            process.stdout.cursorTo(0); 
+            process.stdout.write(`Đã tải ${i+1}/${imgsArr.length}`);
+        })
     }
+  
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     console.log(`\nĐã tải xong ${title} - ${chap}.`);
 
     browser.close();
@@ -136,7 +138,7 @@ async function main(){
                 await Downloader(listChapter[i]);
             }
             
-            // chỉ nên dùng cái bên dưới khi truyện có ít hơn 5 chương
+            // chỉ nên dùng cái bên dưới khi truyện có ít hơn 3 chương hoặc máy của bạn đủ mạnh
             // const downloadPromises = listChapter.map(chapter => Downloader(chapter));
             // await Promise.all(downloadPromises);
     
