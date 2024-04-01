@@ -13,7 +13,7 @@ async function Downloader(readUrl){
 	const page = await browser.newPage();
 	await page.setExtraHTTPHeaders({
 		"Accept-Language": "en",
-        referer: 'https://hentaivn.tv/'
+        referer: 'https://henvn.tv/'
 	});
 	await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36');
 	page.setDefaultNavigationTimeout(0);
@@ -89,7 +89,7 @@ function createFolder(name, path){
 
 async function getListChapter(id){
     console.log('Đang tìm kiếm...');
-    const url = `https://hentaivn.tv/list-showchapter.php?idchapshow=${id}`;
+    const url = `https://henvn.tv/list-showchapter.php?idchapshow=${id}`;
     const browser = await puppeteer.launch({
 		headless: "new",
 		defaultViewport: null,
